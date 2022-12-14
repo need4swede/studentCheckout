@@ -2,10 +2,10 @@
 ##### SETUP ##################
 
 ## 1. Change log directories | First line is for Mac, Second is for Windows
-_log_directory = ["/Volumes/StudentLogs", r"\\192.168.49.10\StudentLogs"]
+_log_directory = ["/Volumes/AppLogs", r"\\192.168.49.10\AppLogs"]
 
 ## 2. Set school domain
-_domain_name = '@domain.edu'
+_domain_name = '@njesd.net'
 
 ######## IMPORTS ##############################
 if 'imports':
@@ -24,7 +24,7 @@ if 'imports':
 
 ######## GLOBAL VARIABLES #####################
 if 'global_variables':
-    _app_name = 'Student Checkout Tool'       # APP NAME
+    _app_name = 'Student Device Tracker'       # APP NAME
     _student_id = ''                          # STUDENT ID NUM
     _student_name = ''                        # STUDENT NAME
     _student_fname = ''                       # STUDENT FNAME
@@ -55,9 +55,9 @@ class DeviceStatus(QWidget):
 
         ## DIRECTORY
         if fs.system('is-mac'):
-            _student_dir_name = f"{fs.root('user')}/Documents/Student Checkout Tool/students"
+            _student_dir_name = f"{fs.root('user')}/Documents/Student Device Tracker/students"
         else:
-            _student_dir_name = f"{fs.root('user')}\Documents\Student Checkout Tool\students"
+            _student_dir_name = f"{fs.root('user')}\Documents\Student Device Tracker\students"
 
         ## LOAD LOGBOOK
         self.logbook = load_workbook(_logbook)
@@ -431,10 +431,10 @@ class NewStudentEntry(QWidget):
         if fs.system('is-mac'):
 
             ## MAKE STUDENTS DIR
-            fs.path_exists(Path=f"{fs.root('user')}/Documents/Student Checkout Tool/students", Make=True)
+            fs.path_exists(Path=f"{fs.root('user')}/Documents/Student Device Tracker/students", Make=True)
 
             ## MAKE NEW STUDENT DIR
-            new_student_dir = f"{fs.root('user')}/Documents/Student Checkout Tool/students/{new_student_email.replace('.', '_').replace('@', '-')}"
+            new_student_dir = f"{fs.root('user')}/Documents/Student Device Tracker/students/{new_student_email.replace('.', '_').replace('@', '-')}"
             fs.path_exists(Path=new_student_dir, Make=True)
 
             ## MAKE NEW STUDENT ID LABEL
@@ -443,10 +443,10 @@ class NewStudentEntry(QWidget):
         else:
 
             ## MAKE STUDENTS DIR
-            fs.path_exists(Path=f"{fs.root('user')}\Documents\Student Checkout Tool\students", Make=True)
+            fs.path_exists(Path=f"{fs.root('user')}\Documents\Student Device Tracker\students", Make=True)
 
             ## MAKE NEW STUDENT DIR
-            new_student_dir = f"{fs.root('user')}\Documents\Student Checkout Tool\students\{new_student_email.replace('.', '_').replace('@', '-')}"
+            new_student_dir = f"{fs.root('user')}\Documents\Student Device Tracker\students\{new_student_email.replace('.', '_').replace('@', '-')}"
             fs.path_exists(Path=new_student_dir, Make=True)
 
             ## MAKE NEW STUDENT ID LABEL
@@ -472,8 +472,8 @@ class NewStudentEntry(QWidget):
             image_writer.font_path = os.path.join("fonts", f"{fs.root('user')}/Programming/Git/py-barcodes/fonts/DejaVuSansMono.ttf")
             self.font_path = os.path.join("fonts", f"{fs.root('user')}/Programming/Git/py-barcodes/fonts/DejaVuSansMono.ttf")
         else:
-            image_writer.font_path = os.path.join("fonts", MainWindow.server_paths[1] + r"\StudentCheckoutTool\fonts\DejaVuSansMono.ttf")
-            self.font_path = os.path.join("fonts", MainWindow.server_paths[1] + r"\StudentCheckoutTool\fonts\DejaVuSansMono.ttf")
+            image_writer.font_path = os.path.join("fonts", MainWindow.server_paths[1] + r"\StudentDeviceTracker\fonts\DejaVuSansMono.ttf")
+            self.font_path = os.path.join("fonts", MainWindow.server_paths[1] + r"\StudentDeviceTracker\fonts\DejaVuSansMono.ttf")
         
         ## CREATE STUDENT ID BARCODE
         create_barcode = barcode.get('code128', self.newStudent_id.text(), writer=image_writer)
@@ -1176,11 +1176,11 @@ class StudentSearch(QWidget):
         ## DIRECTORY
         try:
             if fs.system('is-mac'):
-                self.dir_list = fs.read_dir(f"{fs.root('user')}/Documents/Student Checkout Tool/students", Output='dirs')
-                _student_dir_name = f"{fs.root('user')}/Documents/Student Checkout Tool/students"
+                self.dir_list = fs.read_dir(f"{fs.root('user')}/Documents/Student Device Tracker/students", Output='dirs')
+                _student_dir_name = f"{fs.root('user')}/Documents/Student Device Tracker/students"
             else:
-                self.dir_list = fs.read_dir(f"{fs.root('user')}\Documents\Student Checkout Tool\students", Output='dirs')
-                _student_dir_name = f"{fs.root('user')}\Documents\Student Checkout Tool\students"
+                self.dir_list = fs.read_dir(f"{fs.root('user')}\Documents\Student Device Tracker\students", Output='dirs')
+                _student_dir_name = f"{fs.root('user')}\Documents\Student Device Tracker\students"
         except (TypeError, FileNotFoundError):
             pass
 
@@ -1291,8 +1291,13 @@ class StudentSearch(QWidget):
         ## IMPORT GLOBAL VARIABLE
         global _student_email, _student_dir_name
 
+        ## SEARCH USING ID NUMBER ONLY
+        if not "." in str(search):
+            search = self.id_dir_search([search])[0]
+            search = str(search).replace('_', '.').replace('-', '@')
+
         ## ADD DOMAIN NAME IF NOT IN SEARCH
-        if not "@" in str(search):
+        elif not "@" in str(search):
             search = f"{search}{_domain_name}"
 
         ## SET GLOBAL VARIABLE
@@ -1330,6 +1335,11 @@ class StudentSearch(QWidget):
         except AttributeError:
             MainWindow.information_window('search_no_entries')
             self.close()
+
+    ## SEARCH FOR STUDENT DIR USING ID NUMBER
+    def id_dir_search(self, id_list):
+        result_list = [nm for ps in id_list for nm in self.dir_list if ps in nm]
+        return result_list
 
     ## PRINT A NEW LABEL OF FOUND STUDENT
     def print_label(self):
@@ -1406,10 +1416,10 @@ class MainWindow(QWidget):
         ## APP DOCUMENTS DIRECTORY
         if fs.system('is-mac'):
             self.appDocs = f"{fs.root('docs')}/{_app_name}"
-            self.appDocs_network = self.server_paths[0] + r"/StudentCheckoutTool"
+            self.appDocs_network = self.server_paths[0] + r"/StudentDeviceTracker"
         else:
             self.appDocs = f"{fs.root('docs')}\{_app_name}"
-            self.appDocs_network = self.server_paths[1] + r"\StudentCheckoutTool"
+            self.appDocs_network = self.server_paths[1] + r"\StudentDeviceTracker"
         fs.path_exists(Path=self.appDocs, Make=True)
 
         ## USER PROFILE
@@ -1422,10 +1432,10 @@ class MainWindow(QWidget):
         ## STUDENT LOGBOOK FILE
         if fs.system('is-mac'):
             self.student_logbook_file = self.appProfile + "/student_device_logbook.xlsx"
-            self.student_logbook_file_network = self.server_paths[0] + r"/StudentCheckoutTool/log/student_device_logbook.xlsx"
+            self.student_logbook_file_network = self.server_paths[0] + r"/StudentDeviceTracker/log/student_device_logbook.xlsx"
         else:
             self.student_logbook_file = self.appProfile + "\student_device_logbook.xlsx"
-            self.student_logbook_file_network = self.server_paths[1] + r"\StudentCheckoutTool\log\student_device_logbook.xlsx"
+            self.student_logbook_file_network = self.server_paths[1] + r"\StudentDeviceTracker\log\student_device_logbook.xlsx"
 
         ## CREATE LOGBOOK FILE
         _logbook = self.student_logbook_file
@@ -1434,14 +1444,14 @@ class MainWindow(QWidget):
 
         ## STUDENT ENTRIES
         if fs.system('is-mac'):
-            self.student_dir = f"{fs.root('user')}/Documents/Student Checkout Tool/students"
-            self.student_dir_network = self.server_paths[0] + r"/StudentCheckoutTool/students"
+            self.student_dir = f"{fs.root('user')}/Documents/Student Device Tracker/students"
+            self.student_dir_network = self.server_paths[0] + r"/StudentDeviceTracker/students"
             if not fs.path_exists(self.student_dir):
                 if fs.path_exists(f"{fs.root('user')}/Documents/Student Devices"):
                     shutil.copytree(self.student_dir_network, self.student_dir)
         else:
-            self.student_dir = f"{fs.root('user')}\Documents\Student Checkout Tool\students"
-            self.student_dir_network = self.server_paths[1] + r"\StudentCheckoutTool\students"
+            self.student_dir = f"{fs.root('user')}\Documents\Student Device Tracker\students"
+            self.student_dir_network = self.server_paths[1] + r"\StudentDeviceTracker\students"
 
         #################################################################################### APP WINDOW
         self.setWindowTitle(_app_name)
@@ -1730,6 +1740,7 @@ class MainWindow(QWidget):
                 try:
                     shutil.copy(self.student_logbook_file_network, self.student_logbook_file)
                 except (FileExistsError, FileNotFoundError):
+                    print(self.student_logbook_file_network)
                     pass
                 except (PermissionError):
                     self.information_window('open_logbook')
@@ -1737,7 +1748,7 @@ class MainWindow(QWidget):
 
             ## DOWNLOAD STUDENT ENTRIES
             if action == 'download_students':
-                if fs.system('is-mac') and fs.path_exists(self.student_dir_network):
+                if fs.path_exists(self.student_dir_network):
                     fs.remove_dir(self.student_dir)
                     shutil.copytree(self.student_dir_network, self.student_dir)
 
